@@ -53,7 +53,7 @@ class DbProvider {
           CREATE VIEW IF NOT EXISTS PartyLeg AS SELECT partyID, partyName, debit, credit, IFNULL(debit,0)-IFNULL(credit,0) as Bal FROM Party UNION ALL SELECT partyID, Null, debit, credit, IFNULL(debit,0)-IFNULL(credit,0) as Bal FROM Ledger;""";
 
   static const partLegSumTable = """
-          CREATE VIEW IF NOT EXISTS PartyLegSum AS SELECT partyID, MAX(partyName) as partyName, SUM(Bal) as Bal FROM PartyLeg GROUP BY partyID;""";
+          CREATE VIEW IF NOT EXISTS PartyLegSum AS SELECT partyID, MAX(partyName) as partyName, debit, credit, SUM(Bal) as Bal FROM PartyLeg GROUP BY partyID;""";
 
   Future<int> addPartyItem(PartyModel item) async {
     final db = await init(); //open database
@@ -84,15 +84,15 @@ class DbProvider {
 
   Future<List<PartyModel>> fetchPartyLegSum() async {
     final db = await init();
-    final maps = await db.query(partLegSumTable);
+    final maps = await db.query(partyLegSumCreateViewTableName);
 
     return List.generate(maps.length, (i) {
       //create a list of Categories
       return PartyModel(
         partyID: maps[i]['partyID'],
         partyName: maps[i]['partyName'],
-        // debit: maps[i]['debit'],
-        // credit: maps[i]['credit'],
+        debit: maps[i]['debit'],
+        credit: maps[i]['credit'],
         total: maps[i]['Bal'],
       );
     });
@@ -117,6 +117,25 @@ class DbProvider {
     });
   }
 
+
+  Future<List<PartyModel>> fetchPartyLegSumByPartName(String partyName) async {
+    //returns the Categories as a list (array)
+
+    final db = await init();
+    final maps = await db.query(partyLegSumCreateViewTableName,
+        where: "LOWER(partyName) LIKE ?", whereArgs: ['%$partyName%']);
+
+    return List.generate(maps.length, (i) {
+      //create a list of Categories
+      return PartyModel(
+        partyID: maps[i]['partyID'],
+        partyName: maps[i]['partyName'],
+        debit: maps[i]['debit'],
+        credit: maps[i]['credit'],
+        total: maps[i]['Bal'],
+      );
+    });
+  }
   //Leger table
 
   Future<int> addLedgerItem(LedgerModel item) async {

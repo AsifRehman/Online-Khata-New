@@ -10,6 +10,8 @@ SharedPreferences sharedPreferences;
 final String databaseName = "online_khata.db";
 final String partyTableName = "Party";
 final String legderTableName = "Ledger";
+final String partyLegCreateViewTableName = "PartyLeg";
+final String partyLegSumCreateViewTableName = "PartyLegSum";
 
 
 

@@ -39,12 +39,6 @@ class _LedgerDetailScreenState extends State<LedgerDetailScreen> {
   DbProvider dbProvider = DbProvider();
   List<LedgerModel> ledgerModelList = List();
 
-  // int documentLimit = 10; // documents to be fetched per request
-  // DocumentSnapshot _lastDocument;
-  // bool _gettingMoreParties = false;
-  // bool _morePartiesAvailable = true;
-
-  //ScrollController scrollController = ScrollController();
 
   _LedgerDetailScreenState({this.ID, this.partName});
 
@@ -70,15 +64,6 @@ class _LedgerDetailScreenState extends State<LedgerDetailScreen> {
     //  getLedgerByDateWise(widget.ID);
     super.initState();
   }
-
-  // _scrollListener() {
-  //   double maxScroll = scrollController.position.maxScrollExtent;
-  //   double currentScroll = scrollController.position.pixels;
-  //   double delta = MediaQuery.of(context).size.height * 0.25;
-  //   if (maxScroll - currentScroll <= delta) {
-  //   //  __getMoreLedger(widget.ID);
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -258,18 +243,6 @@ class _LedgerDetailScreenState extends State<LedgerDetailScreen> {
                                 shrinkWrap: true,
                                 itemBuilder: (BuildContext context, int index) {
                                   return new InkWell(
-//                      onTap: () {
-//                        Navigator.push(
-//                            context,
-//                            MaterialPageRoute(
-//                                builder: (context) =>
-//                                    FormSubmitDetails(
-//                                        submitFormDetails:
-//                                        formList[index]
-//                                        ['fields'],
-//                                        formType: formList[index]
-//                                        ['form_type'])));
-//                      },
                                     child: new LedgerItem(
                                         ledgerModelList[index], index),
                                   );
@@ -720,58 +693,6 @@ class _LedgerDetailScreenState extends State<LedgerDetailScreen> {
           });
     }
   }
-//
-// __getMoreLedger(int ID) async {
-//   try {
-//     if (_morePartiesAvailable == false) {
-//       return;
-//     }
-//     if (_gettingMoreParties == true) {
-//       return;
-//     }
-//     _gettingMoreParties = true;
-//     Query q = databaseReference
-//         .collection('Ledger')
-//         .where('PartyID', isEqualTo: ID)
-//       // .orderBy('Date')
-//         .startAfter([_lastDocument.data['PartyID']]).limit(documentLimit);
-//
-//     QuerySnapshot querySnapshot = await q.getDocuments();
-//     if (querySnapshot.documents.length < documentLimit) {
-//       _morePartiesAvailable = false;
-//     }
-//     _lastDocument =
-//         querySnapshot.documents[querySnapshot.documents.length - 1];
-//     setState(() {
-//       `_ledgerList`.addAll(querySnapshot.documents);
-//     });
-//
-//     setState(() {});
-//
-//     _gettingMoreParties = false;
-//   } on SocketException catch (_) {
-//     setState(() {
-//       loading = false;
-//     });
-//     showDialog(
-//         context: context,
-//         barrierDismissible: false,
-//         builder: (BuildContext context) {
-//           return AlertDialog(
-//             title: new Text("No Network Connection"),
-//             content: new Text("Please connect to an Internet connection"),
-//             actions: <Widget>[
-//               new FlatButton(
-//                 child: new Text('OK'),
-//                 onPressed: () {
-//                   Navigator.pop(context);
-//                 },
-//               ),
-//             ],
-//           );
-//         });
-//   }
-// }
 }
 
 class LedgerItem extends StatelessWidget {
@@ -782,22 +703,6 @@ class LedgerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Timestamp t = _item.data["Date"];
-    // DateTime d = t.toDate();
-
-    // DateTime d = new DateTime.fromMicrosecondsSinceEpoch(int.parse(_item.date));
-
-    // Timestamp t = _item.date;
-    // DateTime d = t.toDate();
-
-    // int timeInt=int.parse(_item.date);
-    // DateTime d = new DateTime(timeInt*1000);
-
-    // DateTime d = DateTime.fromMicrosecondsSinceEpoch(t.microsecondsSinceEpoch);
-    //  DateTime date = new DateTime(_item.date);
-
-    // DateTime date = new DateTime(_item.date);
-
     DateTime datetime = DateTime.fromMicrosecondsSinceEpoch(_item.date);
     final DateFormat formatter = DateFormat('dd MMM yyyy');
     String formatted = formatter.format(datetime);
@@ -979,7 +884,7 @@ class LedgerItem extends StatelessWidget {
                                       margin: EdgeInsets.fromLTRB(
                                           0.0, 2.0, 0.0, 0.0),
                                       child: Text(
-                                          formatted.toString(),
+                                        formatted.toString(),
                                         // _item.date.toString(),
                                         // _item.date.toString(),
                                         // getDateTimeFormat(_item.date.toString()),
