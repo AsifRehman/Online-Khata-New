@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "71963037913",
+    "project_id": "quiet-cider-254713",
+    "storage_bucket": "quiet-cider-254713.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:71963037913:android:986974eb18594c84ceeec8",
+        "android_client_info": {
+          "package_name": "com.khata.onlinekhata"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "71963037913-ck7vdjf3rvctsh1k6edqh825u721rm2n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCSUFTWyZTVHgUTLRtmQ91tD1SN04uBZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "71963037913-ck7vdjf3rvctsh1k6edqh825u721rm2n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "71963037913-m4khp0dj56cud8u3phfsloaa42no6mf8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.firestoreTest"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
