@@ -36,6 +36,12 @@ String getDateTimeFormat(String date) {
   return formatted;
 }
 
+int getDateTimeLedgerFormat(DateTime date) {
+ int milliseconds =  date.millisecondsSinceEpoch;
+
+  return milliseconds;
+}
+
 
 bool isKeyNotNull(Object param1) {
   if (param1 != null && param1 !="")

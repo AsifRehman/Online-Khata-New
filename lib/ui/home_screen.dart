@@ -1,15 +1,11 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:onlinekhata/mongo_db/db_connection.dart';
 import 'package:onlinekhata/sqflite_database/DbProvider.dart';
-import 'package:onlinekhata/sqflite_database/model/LedgerModel.dart';
 import 'package:onlinekhata/sqflite_database/model/PartyModel.dart';
 import 'package:onlinekhata/ui/ledger_detail.dart';
-import 'package:onlinekhata/utils/constants.dart';
 
 class HomeScreen extends StatefulWidget {
   static String id = 'home_screen';
@@ -19,32 +15,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<DocumentSnapshot> _partiesList = [];
-  List<DocumentSnapshot> _ledgerList = [];
-
   bool loading = true;
-
   int documentLimit = 100; // documents to be fetched per request
 
   TextEditingController searchController = TextEditingController();
   DbProvider dbProvider = DbProvider();
   List<PartyModel> partyModelList = List();
-  int totalBalance = 0;
 
   @override
   void initState() {
-    getLocalDb().then((value) {
-      if (value != null && value == true) {
-        getDateFromLocalDB();
-      } else {
-        getParties();
-      }
-    });
-
+    getDateFromLocalDB();
 
     super.initState();
   }
 
+  // @override
+  // void dispose() {
+  //   // TODO: implement dispose
+  //   dbProvider.closeDbConnection();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +186,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                               MaterialPageRoute(
                                                   builder: (context) =>
                                                       LedgerDetailScreen(
-                                                        ID: int.parse(partyModelList[index].partyID),
+                                                        ID: int.parse(
+                                                            partyModelList[
+                                                                    index]
+                                                                .partyID),
                                                         partName:
                                                             partyModelList[
                                                                     index]
@@ -216,133 +209,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  getParties() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        setState(() {
-          loading = true;
-        });
-
-        Query q = databaseReference
-            .collection('Party')
-            .where("Id",isEqualTo: 35513);
-            //.orderBy('PartyName');
-            // .limit(documentLimit);
-
-        QuerySnapshot querySnapshot = await q.getDocuments();
-
-        _partiesList = querySnapshot.documents;
-
-        for (int i = 0; i < _partiesList.length; i++) {
-          final partyModel = PartyModel(
-            partyID: _partiesList[i].data['Id'].toString(),
-            partyName: _partiesList[i].data['PartyName'].toString(),
-            debit: isKyNotNull(_partiesList[i].data['Debit'])?_partiesList[i].data['Debit']:0,
-            credit: isKyNotNull( _partiesList[i].data['Credit'])?_partiesList[i].data['Credit']:0,
-            total: _partiesList[i].data["Credit"] == null
-                ?  _partiesList[i].data["Debit"]
-                : _partiesList[i].data["Debit"] == null
-                    ? _partiesList[i].data["Credit"]
-                    :
-             (int.parse(_partiesList[i].data["Debit"].toString()) - int.parse(_partiesList[i].data["Credit"].toString())) >
-                                    0
-                                ? (int.parse(_partiesList[i].data["Debit"].toString()) - int.parse(_partiesList[i].data["Credit"].toString()))
-                                : (int.parse(_partiesList[i].data["Debit"].toString()) - int.parse(_partiesList[i].data["Credit"].toString())).abs(),
-          );
-       //   partyModelList.add(partyModel);
-          await dbProvider.addPartyItem(partyModel);
-        }
-
-       getLedger();
-      }
-    } on SocketException catch (_) {
-      setState(() {
-        loading = false;
-      });
-      showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: new Text("No Network Connection"),
-              content: new Text("Please connect to an Internet connection"),
-              actions: <Widget>[
-                new FlatButton(
-                  child: new Text('OK'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            );
-          });
-    }
-  }
-
-  getLedger() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-
-        Query q = databaseReference
-            .collection('Ledger')
-        .where("PartyID",isEqualTo: 35513);
-        // .limit(documentLimit)
-           // .orderBy('Date', descending: true);
-
-        QuerySnapshot querySnapshot = await q.getDocuments();
-
-        _ledgerList = querySnapshot.documents;
-
-        for (int i = 0; i < _ledgerList.length; i++) {
-
-          final ledgerModel = LedgerModel(
-              partyID: _ledgerList[i].data['PartyID'].toString(),
-              vocNo: _ledgerList[i].data['VocNo'].toString(),
-              tType: _ledgerList[i].data['TType'].toString(),
-              description: _ledgerList[i].data['Description'].toString(),
-            date: getDateTimeFormat(_ledgerList[i].data['Date']) ,
-              debit: isKyNotNull(_ledgerList[i].data['Debit'])?_ledgerList[i].data['Debit']:0,
-              credit: isKyNotNull(_ledgerList[i].data['Credit'])?_ledgerList[i].data['Credit']:0);
-          await dbProvider.addLedgerItem(ledgerModel);
-        }
-
-        setLocalDb(true);
-
-        getDateFromLocalDB();
-
-      }
-    } on SocketException catch (_) {
-      setState(() {
-        loading = false;
-      });
-      showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: new Text("No Network Connection"),
-              content: new Text("Please connect to an Internet connection"),
-              actions: <Widget>[
-                new FlatButton(
-                  child: new Text('OK'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            );
-          });
-    }
-  }
-
-
-  int getDateTimeFormat(Timestamp date) {
-
-   return date.microsecondsSinceEpoch;
-  }
-
   getDateFromLocalDB() async {
     dbProvider.fetchPartyLegSum().then((value) {
       partyModelList = value;
@@ -358,7 +224,6 @@ class _HomeScreenState extends State<HomeScreen> {
 class PartiesItem extends StatelessWidget {
   final PartyModel _item;
   final int index;
-
 
   PartiesItem(this._item, this.index);
 
@@ -482,16 +347,13 @@ class PartiesItem extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Container(
-                        margin:
-                        EdgeInsets.fromLTRB(3.0, 0.0, 0.0, 0.0),
+                        margin: EdgeInsets.fromLTRB(3.0, 0.0, 0.0, 0.0),
                         child: Text(
-                          'RS ' + _item.total.abs().toString()
-                            ,
+                          'RS ' + _item.total.abs().toString(),
                           textAlign: TextAlign.right,
                           maxLines: 1,
                           softWrap: true,
@@ -530,7 +392,7 @@ class PartiesItem extends StatelessWidget {
   }
 
   bool isKeyNotNull(Object param1) {
-    if (param1 != null && param1!="")
+    if (param1 != null && param1 != "")
       return true;
     else
       return false;

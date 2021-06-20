@@ -55,14 +55,69 @@ class DbProvider {
   static const partLegSumTable = """
           CREATE VIEW IF NOT EXISTS PartyLegSum AS SELECT partyID, MAX(partyName) as partyName, debit, credit, SUM(Bal) as Bal FROM PartyLeg GROUP BY partyID;""";
 
-  Future<int> addPartyItem(PartyModel item) async {
+  Future addPartyItem(var collection) async {
     final db = await init(); //open database
 
-    return db.insert(
-      partyTableName,
-      item.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.transaction((txn) async {
+      var batch = txn.batch();
+
+      await collection.find().forEach((v) async {
+        final partyModel = PartyModel(
+          partyID: v['PartyTypeId'].toString(),
+          partyName: v['PartyName'].toString(),
+          debit: isKyNotNull(v['Debit'].toString()) ? v['Debit'] : 0,
+          credit: isKyNotNull(v['Credit']) ? v['Credit'] : 0,
+          total: v['Credit'] == null
+              ? v['Debit']
+              : v['Debit'] == null
+                  ? v['Credit']
+                  : (int.parse(v['Debit'].toString()) -
+                              int.parse(v['Credit'].toString())) >
+                          0
+                      ? (int.parse(v['Debit'].toString()) -
+                          int.parse(v['Credit'].toString()))
+                      : (int.parse(v['Debit'].toString()) -
+                              int.parse(v['Credit'].toString()))
+                          .abs(),
+        );
+
+        await batch.insert(
+          partyTableName,
+          partyModel.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      });
+
+      await batch.commit();
+    });
+  }
+
+  //Leger table
+  Future addLedgerItem(var ledgerCollection) async {
+    final db = await init(); //open database
+    await db.transaction((txn) async {
+      var batch = txn.batch();
+
+      await ledgerCollection.find().forEach((v) async {
+        final ledgerModel = LedgerModel(
+            partyID: v['_id'].toString(),
+            vocNo: v['VocNo'].toString(),
+            tType: v['TType'].toString(),
+            description: v['Description'].toString(),
+            date: getDateTimeLedgerFormat(v['Date']),
+            // date: 19939389822,
+            debit: isKyNotNull(v['Debit']) ? v['Debit'] : 0,
+            credit: isKyNotNull(v['Credit']) ? v['Credit'] : 0);
+
+        await batch.insert(
+          legderTableName,
+          ledgerModel.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      });
+
+      await batch.commit();
+    });
   }
 
   Future<List<PartyModel>> fetchParties() async {
@@ -80,7 +135,6 @@ class DbProvider {
       );
     });
   }
-
 
   Future<List<PartyModel>> fetchPartyLegSum() async {
     final db = await init();
@@ -117,7 +171,6 @@ class DbProvider {
     });
   }
 
-
   Future<List<PartyModel>> fetchPartyLegSumByPartName(String partyName) async {
     //returns the Categories as a list (array)
 
@@ -135,17 +188,6 @@ class DbProvider {
         total: maps[i]['Bal'],
       );
     });
-  }
-  //Leger table
-
-  Future<int> addLedgerItem(LedgerModel item) async {
-    final db = await init(); //open database
-
-    return db.insert(
-      legderTableName,
-      item.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
   }
 
   Future<List<LedgerModel>> fetchLedger() async {
@@ -171,12 +213,11 @@ class DbProvider {
 
     final db = await init();
     final maps = await db.query(legderTableName,
-       where: "partyID = ?" ,
-      orderBy: "date DESC",
-      whereArgs: [
+        where: "partyID = ?",
+        orderBy: "date DESC",
+        whereArgs: [
           partyId
-        ]
-    ); //query all the rows in a table as an array of maps
+        ]); //query all the rows in a table as an array of maps
 
     return List.generate(maps.length, (i) {
       //create a list of Categories
@@ -192,16 +233,9 @@ class DbProvider {
     });
   }
 
-// Future<int> updateTotalSumOfCategories(String categoryId) async{
-//
-//   final db = await init();
-//   int result = await db.rawUpdate('''
-//   UPDATE $billsCategoryTableName
-//   SET totalBillsCost = (SELECT SUM(billCost) FROM $billsTableName WHERE billCategoryId = ?)
-//    WHERE categoryId = ?
-//   ''',
-//       [categoryId, categoryId]);
-//
-//   return result;
-// }
+  Future closeDbConnection() async {
+    final db = await init();
+
+    await db.close();
+  }
 }

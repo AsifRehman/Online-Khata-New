@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:onlinekhata/ui/sync_screen.dart';
 import 'dart:async';
 
 import 'home_screen.dart';
@@ -26,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void navigationPage() {
-    Navigator.of(context).pushReplacementNamed(HomeScreen.id);
+    Navigator.of(context).pushReplacementNamed(SyncScreen.id);
   }
 
   @override

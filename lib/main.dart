@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:onlinekhata/ui/ledger_detail.dart';
 import 'package:onlinekhata/ui/splash_screen.dart';
 import 'package:onlinekhata/ui/home_screen.dart';
+import 'package:onlinekhata/ui/sync_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
           SplashScreen.id: (context) => SplashScreen(),
          HomeScreen.id: (context) => HomeScreen(),
           LedgerDetailScreen.id: (context) => LedgerDetailScreen(),
+          SyncScreen.id: (context) => SyncScreen(),
         });
   }
 }
