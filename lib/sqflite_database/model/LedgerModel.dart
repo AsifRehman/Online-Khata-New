@@ -1,22 +1,24 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class LedgerModel {
-  String partyID;
+  int id;
+  int partyID;
   String vocNo;
   String tType;
   String description;
   int date;
   int debit;
   int credit;
+  int ts;
 
-  LedgerModel(
-      {this.partyID,
-      this.vocNo,
-      this.tType,
-      this.description,
-      this.date,
-      this.debit,
-      this.credit});
+  LedgerModel({
+    this.partyID,
+    this.vocNo,
+    this.tType,
+    this.description,
+    this.date,
+    this.debit,
+    this.credit,
+    this.ts,
+  });
 
   Map<String, dynamic> toMap() {
     // used when inserting data to the database
@@ -28,6 +30,7 @@ class LedgerModel {
       "date": date,
       "debit": debit,
       "credit": credit,
+      "ts": ts,
     };
   }
 }

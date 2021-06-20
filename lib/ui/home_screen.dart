@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:onlinekhata/mongo_db/db_connection.dart';
 import 'package:onlinekhata/sqflite_database/DbProvider.dart';
 import 'package:onlinekhata/sqflite_database/model/PartyModel.dart';
 import 'package:onlinekhata/ui/ledger_detail.dart';
@@ -40,7 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final width = size.width;
-    final height = size.height;
     return SafeArea(
       child: Scaffold(
         body: ModalProgressHUD(
@@ -135,7 +131,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             partyModelList = value;
 
                             setState(() {
-                              partyModelList;
                               loading = false;
                             });
                           });
@@ -147,7 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             partyModelList = value;
 
                             setState(() {
-                              partyModelList;
                               loading = false;
                             });
                           });
@@ -214,7 +208,6 @@ class _HomeScreenState extends State<HomeScreen> {
       partyModelList = value;
 
       setState(() {
-        partyModelList;
         loading = false;
       });
     });

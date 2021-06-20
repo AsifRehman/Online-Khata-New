@@ -39,7 +39,6 @@ class _LedgerDetailScreenState extends State<LedgerDetailScreen> {
   DbProvider dbProvider = DbProvider();
   List<LedgerModel> ledgerModelList = List();
 
-
   _LedgerDetailScreenState({this.ID, this.partName});
 
   @override

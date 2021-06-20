@@ -9,7 +9,7 @@ import 'package:path/path.dart';
 import 'model/LedgerModel.dart';
 import 'model/PartyModel.dart';
 
-class DbProvider {
+class sqliteDbProvider {
   Future<Database> init() async {
     Directory directory = await getApplicationDocumentsDirectory();
     final path = join(directory.path, databaseName);
@@ -18,35 +18,37 @@ class DbProvider {
       //open the database or create a database if there isn't any
       path,
       version: 1,
-      onCreate: (Database db, int version) async {
-        await db.execute(partyTable);
-        await db.execute(legderTable);
-        await db.execute(partLegTable);
-        await db.execute(partLegSumTable);
+      onCreate: (Database sqliteDb, int version) async {
+        await sqliteDb.execute(partyTable);
+        await sqliteDb.execute(legderTable);
+        await sqliteDb.execute(partLegTable);
+        await sqliteDb.execute(partLegSumTable);
       },
     );
   }
 
   static const partyTable = """
           CREATE TABLE IF NOT EXISTS Party (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          partyID TEXT,
+          partyID INTEGER PRIMARY KEY AUTOINCREMENT,
           partyName TEXT,
+          partyTypeId INTEGER,
           debit INTEGER,
           credit INTEGER,
-          total INTEGER
+          total INTEGER,
+          ts INTEGER
           );""";
 
   static const legderTable = """
           CREATE TABLE IF NOT EXISTS Ledger (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          partyID TEXT,
-          vocNo TEXT,
+          partyID INTEGER,
+          vocNo INTEGER,
           tType TEXT,
           description TEXT,
           date INTEGER,
           debit INTEGER,
-          credit INTEGER
+          credit INTEGER,
+          ts INTEGER
           );""";
 
   static const partLegTable = """
@@ -56,15 +58,16 @@ class DbProvider {
           CREATE VIEW IF NOT EXISTS PartyLegSum AS SELECT partyID, MAX(partyName) as partyName, debit, credit, SUM(Bal) as Bal FROM PartyLeg GROUP BY partyID;""";
 
   Future addPartyItem(var collection) async {
-    final db = await init(); //open database
+    final sqliteDb = await init(); //open database
 
-    await db.transaction((txn) async {
+    await sqliteDb.transaction((txn) async {
       var batch = txn.batch();
 
       await collection.find().forEach((v) async {
         final partyModel = PartyModel(
-          partyID: v['PartyTypeId'].toString(),
+          partyID: v['_id'],
           partyName: v['PartyName'].toString(),
+          partyTypeId: v['PartyTypeId'],
           debit: isKyNotNull(v['Debit'].toString()) ? v['Debit'] : 0,
           credit: isKyNotNull(v['Credit']) ? v['Credit'] : 0,
           total: v['Credit'] == null
@@ -79,9 +82,10 @@ class DbProvider {
                       : (int.parse(v['Debit'].toString()) -
                               int.parse(v['Credit'].toString()))
                           .abs(),
+          ts: v['ts'],
         );
 
-        await batch.insert(
+        batch.insert(
           partyTableName,
           partyModel.toMap(),
           conflictAlgorithm: ConflictAlgorithm.ignore,
@@ -94,13 +98,13 @@ class DbProvider {
 
   //Leger table
   Future addLedgerItem(var ledgerCollection) async {
-    final db = await init(); //open database
-    await db.transaction((txn) async {
+    final sqliteDb = await init(); //open database
+    await sqliteDb.transaction((txn) async {
       var batch = txn.batch();
 
       await ledgerCollection.find().forEach((v) async {
         final ledgerModel = LedgerModel(
-            partyID: v['_id'].toString(),
+            partyID: v['_id'],
             vocNo: v['VocNo'].toString(),
             tType: v['TType'].toString(),
             description: v['Description'].toString(),
@@ -109,7 +113,7 @@ class DbProvider {
             debit: isKyNotNull(v['Debit']) ? v['Debit'] : 0,
             credit: isKyNotNull(v['Credit']) ? v['Credit'] : 0);
 
-        await batch.insert(
+        batch.insert(
           legderTableName,
           ledgerModel.toMap(),
           conflictAlgorithm: ConflictAlgorithm.ignore,
@@ -121,8 +125,8 @@ class DbProvider {
   }
 
   Future<List<PartyModel>> fetchParties() async {
-    final db = await init();
-    final maps = await db.query(partyTableName);
+    final sqliteDb = await init();
+    final maps = await sqliteDb.query(partyTableName);
 
     return List.generate(maps.length, (i) {
       //create a list of Categories
@@ -137,13 +141,13 @@ class DbProvider {
   }
 
   Future<List<PartyModel>> fetchPartyLegSum() async {
-    final db = await init();
-    final maps = await db.query(partyLegSumCreateViewTableName);
+    final sqliteDb = await init();
+    final maps = await sqliteDb.query(partyLegSumCreateViewTableName);
 
     return List.generate(maps.length, (i) {
       //create a list of Categories
       return PartyModel(
-        partyID: maps[i]['partyID'],
+        partyID: maps[i]['partyID'].toString(),
         partyName: maps[i]['partyName'],
         debit: maps[i]['debit'],
         credit: maps[i]['credit'],
@@ -155,8 +159,8 @@ class DbProvider {
   Future<List<PartyModel>> fetchPartyByPartName(String partyName) async {
     //returns the Categories as a list (array)
 
-    final db = await init();
-    final maps = await db.query(partyTableName,
+    final sqliteDb = await init();
+    final maps = await sqliteDb.query(partyTableName,
         where: "LOWER(partyName) LIKE ?", whereArgs: ['%$partyName%']);
 
     return List.generate(maps.length, (i) {
@@ -174,14 +178,14 @@ class DbProvider {
   Future<List<PartyModel>> fetchPartyLegSumByPartName(String partyName) async {
     //returns the Categories as a list (array)
 
-    final db = await init();
-    final maps = await db.query(partyLegSumCreateViewTableName,
+    final sqliteDb = await init();
+    final maps = await sqliteDb.query(partyLegSumCreateViewTableName,
         where: "LOWER(partyName) LIKE ?", whereArgs: ['%$partyName%']);
 
     return List.generate(maps.length, (i) {
       //create a list of Categories
       return PartyModel(
-        partyID: maps[i]['partyID'],
+        partyID: maps[i]['partyID'].toString(),
         partyName: maps[i]['partyName'],
         debit: maps[i]['debit'],
         credit: maps[i]['credit'],
@@ -191,8 +195,8 @@ class DbProvider {
   }
 
   Future<List<LedgerModel>> fetchLedger() async {
-    final db = await init();
-    final maps = await db.query(legderTableName);
+    final sqliteDb = await init();
+    final maps = await sqliteDb.query(legderTableName);
 
     return List.generate(maps.length, (i) {
       //create a list of Categories
@@ -211,8 +215,8 @@ class DbProvider {
   Future<List<LedgerModel>> fetchLedgerByPartyId(String partyId) async {
     //returns the Categories as a list (array)
 
-    final db = await init();
-    final maps = await db.query(legderTableName,
+    final sqliteDb = await init();
+    final maps = await sqliteDb.query(legderTableName,
         where: "partyID = ?",
         orderBy: "date DESC",
         whereArgs: [
@@ -233,9 +237,9 @@ class DbProvider {
     });
   }
 
-  Future closeDbConnection() async {
-    final db = await init();
+  Future closesqliteDbConnection() async {
+    final sqliteDb = await init();
 
-    await db.close();
+    await sqliteDb.close();
   }
 }

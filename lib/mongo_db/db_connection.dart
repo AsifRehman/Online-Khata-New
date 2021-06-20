@@ -1,10 +1,5 @@
-import 'dart:ffi';
-
 import 'package:mongo_dart/mongo_dart.dart';
 import 'package:onlinekhata/sqflite_database/DbProvider.dart';
-import 'package:onlinekhata/sqflite_database/model/LedgerModel.dart';
-import 'package:onlinekhata/sqflite_database/model/PartyModel.dart';
-import 'package:onlinekhata/utils/constants.dart';
 
 var db;
 DbProvider dbProvider = DbProvider();
@@ -19,24 +14,15 @@ Future<void> openDbConnection() async {
 
 Future<void> getPartyData() async {
   try {
-
     var collection = db.collection('Party');
 
-    await   dbProvider.addPartyItem(collection);
-
-
-  } catch (e) {
-    int  i=9;
-  }
+    await dbProvider.addPartyItem(collection);
+  } catch (e) {}
 }
+
 Future<void> getLedgerData() async {
   try {
-
     var ledgerCollection = db.collection('Ledger');
-    await  dbProvider.addLedgerItem(ledgerCollection);
-
-
-  } catch (e) {
-    int i=0;
-  }
+    await dbProvider.addLedgerItem(ledgerCollection);
+  } catch (e) {}
 }
